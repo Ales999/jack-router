@@ -34,7 +34,7 @@ static int	kNumOutputs = 4;
 
 #if WINDOWS
 
-#include "jack.h"
+#include <jack/jack.h>
 #include "rpc.h"
 #include "rpcndr.h"
 
