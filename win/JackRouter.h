@@ -128,12 +128,15 @@ public:
 
 private:
 
+#ifdef JACK_LOG
+    char* name_log = "c:\\TEMP\\_JackRoute.log";
+#endif
 	void bufferSwitchX();
 
 	double fSamplePosition;
 	ASIOCallbacks* fCallbacks;
-	ASIOTime fAsioTime;
-	ASIOTimeStamp fTheSystemTime;
+	ASIOTime fAsioTime{};
+	ASIOTimeStamp fTheSystemTime{};
 
 	void** fInputBuffers;
 	void** fOutputBuffers;
@@ -141,18 +144,18 @@ private:
 	long* fInMap;
 	long* fOutMap;
 
-	long fInputLatency;
-	long fOutputLatency;
+	long fInputLatency{};
+	long fOutputLatency{};
 	long fActiveInputs;
 	long fActiveOutputs;
 	long fToggle;
-	long fMilliSeconds;
+	long fMilliSeconds{};
 	bool fRunning;
 	bool fFirstActivate;
     bool fFloatSample;
     bool fAliasSystem;
 	bool fTimeInfoMode, fTcRead;
-	char fErrorMessage[128];
+	char fErrorMessage[128]{};
 
 	bool fAutoConnectIn;
 	bool fAutoConnectOut;
@@ -168,8 +171,8 @@ private:
 	void saveConnections();
     void restoreConnections();
     
-    void processInputs();
-    void processOutputs();
+    void processInputs() const;
+    void processOutputs() const;
 
 };
 

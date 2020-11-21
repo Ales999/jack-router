@@ -139,7 +139,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>C:\msys64\opt\jack\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_STDINT_H;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_STDINT_H;WIN32;_DEBUG;_WINDOWS;JACK_LOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>Debug\JackRouter.pch</PrecompiledHeaderOutputFile>
@@ -171,6 +171,7 @@
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\JackRouter.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

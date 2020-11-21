@@ -172,10 +172,10 @@ JackRouter::JackRouter() : AsioDriver()
 	fRunning = false;
 	fTimeInfoMode = false;
 	fTcRead = false;
-	fClient = NULL;
+	fClient = nullptr;
 	fAutoConnectIn = true;
 	fAutoConnectOut = true;
-	fCallbacks = 0;
+	fCallbacks = nullptr;
 	fActiveInputs = fActiveOutputs = 0;
 	fToggle = 0;
 	fBufferSize = 512;
@@ -185,9 +185,11 @@ JackRouter::JackRouter() : AsioDriver()
 
 #ifdef JACK_LOG 
 	fStream = new ofstream(name_log, ios_base::ate);
-    *fStream << "======================" << std::endl;
-    *fStream << "JackRouter::JackRouter" <<  std::endl;
-    *fStream << "======================" << std::endl;
+    if(! fStream->bad()) {
+        *fStream << "======================" << std::endl;
+        *fStream << "JackRouter::JackRouter" <<  std::endl;
+        
+    }
 #endif
 
 	// Use "jackrouter.ini" parameters if available
@@ -232,6 +234,13 @@ JackRouter::JackRouter() : AsioDriver()
         fOutputBuffers = (void**)new float*[kNumOutputs];
     }
 
+#ifdef JACK_LOG
+    *fStream << "======= Buffers ======" << std::endl;
+    *fStream << " fFloatSample = " << fFloatSample << std::endl;
+    *fStream << " kNumInputs   = " << kNumInputs   << std::endl;
+    *fStream << " kNumOutputs  = " << kNumOutputs  << std::endl;
+#endif
+
     fInMap = new long[kNumInputs];
 	fOutMap = new long[kNumOutputs];
     
@@ -258,8 +267,8 @@ JackRouter::~JackRouter()
     *fStream << "JackRouter::~JackRouter" <<  std::endl;
     *fStream << "=======================" << std::endl;
 #endif
-	stop();
-	disposeBuffers();
+    JackRouter::stop();
+    JackRouter::disposeBuffers();
 	jack_client_close(fClient);
 	delete[] fInputBuffers;
     delete[] fOutputBuffers;
@@ -268,6 +277,7 @@ JackRouter::~JackRouter()
     delete[] fInMap;
     delete[] fOutMap;
 #ifdef JACK_LOG  
+    *fStream << "delete fStream" << std::endl;
     delete fStream;
 #endif
 }
@@ -343,7 +353,7 @@ void JackRouter::shutdownCallback(void* arg)
 }
 
 //------------------------------------------------------------------------------------------
-void JackRouter::processInputs()
+void JackRouter::processInputs() const
 {
     int pos = (fToggle) ? 0 : fBufferSize;
     
@@ -363,7 +373,7 @@ void JackRouter::processInputs()
 }
 
 //------------------------------------------------------------------------------------------
-void JackRouter::processOutputs()
+void JackRouter::processOutputs() const
 {
     int pos = (fToggle) ? 0 : fBufferSize;
     
@@ -423,18 +433,18 @@ ASIOBool JackRouter::init(void* sysRef)
 		return true;
 	}
 
-	HANDLE win = (HANDLE)sysRef;
-	int	my_pid = _getpid();
+    auto win = (HANDLE)sysRef;
+    const int	my_pid = _getpid();
 
 	if (!GetEXEName(my_pid, name)) { // If getting the .exe name fails, takes a generic one.
-		_snprintf(name, sizeof(name) - 1, "JackRouter_%d", my_pid);
+		_snprintf_s(name, sizeof(name) - 1, "JackRouter_%d", my_pid);
 	}
 
-	_snprintf(name_log, sizeof(name_log) - 1, "JackRouter_%s.log", name);
+	_snprintf_s(name_log, sizeof(name_log) - 1, "JackRouter_%s.log", name);
 
 	fClient = jack_client_open(name, JackNoStartServer, NULL);
-	if (fClient == NULL) {
-		strcpy(fErrorMessage, "Open error: is JACK server running?");
+	if (fClient == nullptr) {
+		strcpy_s(fErrorMessage, "Open error: is JACK server running?");
 		printf("Open error: is JACK server running?\n");
 		return false;
 	}
@@ -448,7 +458,13 @@ ASIOBool JackRouter::init(void* sysRef)
 
 	fInputLatency = fBufferSize;		// typically
 	fOutputLatency = fBufferSize * 2;
-	fMilliSeconds = (long)((double)(fBufferSize * 1000) / fSampleRate);
+    //TODO double to long ?
+	//fMilliSeconds = (long)((double)(fBufferSize * 1000) / fSampleRate);
+    fMilliSeconds = static_cast<long>(static_cast<double>(fBufferSize * 1000) / fSampleRate);
+
+#ifdef JACK_LOG 
+        *fStream << "JackRouter::init : SampleRate = " << fSampleRate <<  " and fMilliSeconds == " << fMilliSeconds <<  std::endl;
+#endif
 
 	// Typically fBufferSize * 2; try to get 1 by offering direct buffer
 	// access, and using asioPostOutput for lower latency
@@ -683,6 +699,7 @@ end:
 }
 
 //------------------------------------------------------------------------------------------
+// TODO remove 'goto'
 ASIOError JackRouter::createBuffers(ASIOBufferInfo *bufferInfos, long numChannels,
 	long bufferSize, ASIOCallbacks *callbacks)
 {
@@ -806,17 +823,17 @@ ASIOError JackRouter::disposeBuffers()
 {
 	long i;
 
-	fCallbacks = 0;
+	fCallbacks = nullptr;
 	stop();
 
 	for (i = 0; i < fActiveInputs; i++) {
-		delete[] fInputBuffers[i];
+		delete[] static_cast<JackRouter**>(fInputBuffers[i]);
 		jack_port_unregister(fClient, fInputPorts[i]);
 	}
 	fActiveInputs = 0;
 
 	for (i = 0; i < fActiveOutputs; i++) {
-		delete[] fOutputBuffers[i];
+		delete[] static_cast<JackRouter**>(fOutputBuffers[i]);
 		jack_port_unregister(fClient, fOutputPorts[i]);
 	}
 	fActiveOutputs = 0;
