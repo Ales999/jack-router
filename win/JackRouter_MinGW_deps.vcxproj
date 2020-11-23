@@ -95,7 +95,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
-      <AdditionalIncludeDirectories>C:\msys64\opt\jack\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\msys64\opt\jack2\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_STDINT_H;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
@@ -103,6 +103,7 @@
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -138,14 +139,15 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\msys64\opt\jack\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\msys64\opt\jack2\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_STDINT_H;WIN32;_DEBUG;_WINDOWS;JACK_LOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
-      <PrecompiledHeaderOutputFile>Debug\JackRouter.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Debug\JackRouter.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>Debug\</ObjectFileName>
       <ProgramDataBaseFileName>Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -182,13 +184,14 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\msys64\opt\jack\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\msys64\opt\jack2\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_STDINT_H;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Release\JackRouter.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -224,7 +227,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\msys64\opt\jack\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\msys64\opt\jack2\include;C:\msys64\opt\asiosdk\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_STDINT_H;WIN32;NDEBUG;_WINDOWS;PSAPI_VERSION=2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
@@ -233,6 +236,7 @@
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <ForcedIncludeFiles>stdint.h</ForcedIncludeFiles>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -272,16 +276,16 @@
     <ResourceCompile Include="resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\msys64\opt\asiosdk\common\asio.h" />
+    <ClInclude Include="..\..\..\..\..\msys64\opt\asiosdk\common\asiodrvr.h" />
+    <ClInclude Include="..\..\..\..\..\msys64\opt\asiosdk\common\asiosys.h" />
     <ClInclude Include="..\..\..\..\..\msys64\opt\asiosdk\common\combase.h" />
-    <ClInclude Include="..\common\asio.h" />
-    <ClInclude Include="..\common\asiodrvr.h" />
-    <ClInclude Include="..\common\asiosmpl.h" />
-    <ClInclude Include="..\common\asiosys.h" />
-    <ClInclude Include="..\common\iasiodrv.h" />
+    <ClInclude Include="..\..\..\..\..\msys64\opt\asiosdk\common\iasiodrv.h" />
+    <ClInclude Include="..\..\..\..\..\msys64\opt\asiosdk\driver\asiosample\asiosmpl.h" />
     <ClInclude Include="JackRouter.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\..\..\msys64\opt\jack\lib\libjack64.dll.a" />
+    <Library Include="..\..\..\..\..\msys64\opt\jack2\lib\libjack64.dll.a" />
     <Library Include="Psapi.Lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

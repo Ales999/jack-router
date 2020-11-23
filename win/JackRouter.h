@@ -34,6 +34,8 @@ static int	kNumOutputs = 4;
 
 #if WINDOWS
 
+#include <cstdint>
+
 #include <jack/jack.h>
 #include "rpc.h"
 #include "rpcndr.h"
@@ -58,7 +60,7 @@ class JackRouter : public IASIO, public CUnknown
 {
 public:
 	JackRouter(LPUNKNOWN pUnk, HRESULT *phr);
-	~JackRouter();
+	virtual ~JackRouter();
 
 	DECLARE_IUNKNOWN
     //STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {      \
@@ -96,8 +98,8 @@ public:
 	long getDriverVersion();
 	void getErrorMessage(char *string);	// max 128 bytes incl.
 
-	ASIOError start();
-	ASIOError stop();
+	ASIOError start() override;
+    ASIOError stop() override;
 
 	ASIOError getChannels(long *numInputChannels, long *numOutputChannels);
 	ASIOError getLatencies(long *inputLatency, long *outputLatency);
@@ -115,7 +117,7 @@ public:
 
 	ASIOError createBuffers(ASIOBufferInfo *bufferInfos, long numChannels,
 		long bufferSize, ASIOCallbacks *callbacks);
-	ASIOError disposeBuffers();
+    ASIOError disposeBuffers() override;
 
 	ASIOError controlPanel();
 	ASIOError future(long selector, void *opt);
@@ -168,8 +170,8 @@ private:
 	ASIOSampleRate fSampleRate;
 
 	void autoConnect();
-	void saveConnections();
-    void restoreConnections();
+	void saveConnections() const;
+    void restoreConnections() const;
     
     void processInputs() const;
     void processOutputs() const;

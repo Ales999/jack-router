@@ -26,9 +26,10 @@
 #pragma warning (disable : 4786)
 #endif
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+#include <cstdio>
+#include <cstring>
+#include <cstddef>
+//#include <cassert> // not needed
 #include <process.h>
 #include "JackRouter.h"
 #include "profport.h"
@@ -115,14 +116,13 @@ extern LONG UnregisterAsioDriver(CLSID,char *,char *);
 //
 HRESULT _stdcall DllRegisterServer()
 {
-	LONG	rc;
-	char	errstr[128];
+    char	errstr[128];
 
-	rc = RegisterAsioDriver (IID_ASIO_DRIVER, JACK_ROUTER,"JackRouter","JackRouter","Apartment");
+	LONG rc = RegisterAsioDriver(IID_ASIO_DRIVER, JACK_ROUTER, "JackRouter", "JackRouter", "Apartment");
 
 	if (rc) {
 		memset(errstr,0,128);
-		sprintf(errstr,"Register Server failed ! (%d)", rc);
+		sprintf_s(errstr,"Register Server failed ! (%d)", rc);
 		MessageBox(0,(LPCTSTR)errstr,(LPCTSTR)"JackRouter",MB_OK);
 		return -1;
 	}
@@ -135,14 +135,13 @@ HRESULT _stdcall DllRegisterServer()
 //
 HRESULT _stdcall DllUnregisterServer()
 {
-	LONG	rc;
-	char	errstr[128];
+    char	errstr[128];
 
-	rc = UnregisterAsioDriver (IID_ASIO_DRIVER,JACK_ROUTER,"JackRouter");
+	LONG rc = UnregisterAsioDriver(IID_ASIO_DRIVER,JACK_ROUTER, "JackRouter");
 
 	if (rc) {
 		memset(errstr,0,128);
-		sprintf(errstr,"Unregister Server failed ! (%d)",rc);
+		sprintf_s(errstr,"Unregister Server failed ! (%d)",rc);
 		MessageBox(0,(LPCTSTR)errstr,(LPCTSTR)"JackRouter",MB_OK);
 		return -1;
 	}
@@ -154,9 +153,11 @@ HRESULT _stdcall DllUnregisterServer()
 list<pair<string, string> > JackRouter::fConnections;
 
 //------------------------------------------------------------------------------------------
+// Global Variable
+const char* p_name = "ASIOJACK";
 //------------------------------------------------------------------------------------------
 JackRouter::JackRouter (LPUNKNOWN pUnk, HRESULT *phr)
-	: CUnknown("ASIOJACK", pUnk, phr)
+	: CUnknown(const_cast<TCHAR*>(p_name), pUnk, phr)
 
 //------------------------------------------------------------------------------------------
 
@@ -204,7 +205,7 @@ JackRouter::JackRouter() : AsioDriver()
 
 		// Compute .ini file path
 		string fullPath = dllName;
-		int lastPos = fullPath.find_last_of(PATH_SEP);
+		std::size_t lastPos = fullPath.find_last_of(PATH_SEP);
 		string  dllFolder =  fullPath.substr(0, lastPos);
 		confPath = dllFolder + PATH_SEP + "JackRouter.ini";
 
@@ -264,11 +265,11 @@ JackRouter::~JackRouter()
 {
 #ifdef JACK_LOG 
     *fStream << "=======================" << std::endl;
-    *fStream << "JackRouter::~JackRouter" <<  std::endl;
+    *fStream << "Entering JackRouter::~JackRouter" <<  std::endl;
     *fStream << "=======================" << std::endl;
 #endif
-    JackRouter::stop();
-    JackRouter::disposeBuffers();
+    //JackRouter::stop();
+    //JackRouter::disposeBuffers();
 	jack_client_close(fClient);
 	delete[] fInputBuffers;
     delete[] fOutputBuffers;
@@ -278,6 +279,7 @@ JackRouter::~JackRouter()
     delete[] fOutMap;
 #ifdef JACK_LOG  
     *fStream << "delete fStream" << std::endl;
+    //if(fStream->is_open()) fStream->close();
     delete fStream;
 #endif
 }
@@ -286,24 +288,23 @@ JackRouter::~JackRouter()
 
 static bool GetEXEName(DWORD dwProcessID, char* name)
 {
-    DWORD aProcesses [1024], cbNeeded, cProcesses;
-    unsigned int i;
+    DWORD aProcesses [1024], cbNeeded;
 
     // Enumerate all processes
     if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
         return false;
 
     // Calculate how many process identifiers were returned.
-    cProcesses = cbNeeded / sizeof(DWORD);
+    const DWORD cProcesses = cbNeeded / sizeof(DWORD);
 
     TCHAR szEXEName[MAX_PATH];
     // Loop through all process to find the one that matches
     // the one we are looking for
 
-    for (i = 0; i < cProcesses; i++) {
+    for (unsigned int i = 0; i < cProcesses; i++) {
         if (aProcesses [i] == dwProcessID) {
             // Get a handle to the process
-            HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+            const HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
                               PROCESS_VM_READ, FALSE, dwProcessID);
 
             // Get the process name
@@ -316,7 +317,7 @@ static bool GetEXEName(DWORD dwProcessID, char* name)
                     //Get the name of the exe file
                     GetModuleBaseName(hProcess, hMod, szEXEName,
                         sizeof(szEXEName)/sizeof(TCHAR));
-					int len = strlen((char*)szEXEName) - 4; // remove ".exe"
+                    const std::size_t len = strlen((char*)szEXEName) - 4; // remove ".exe"
 					strncpy(name, (char*)szEXEName, len);
 					name[len] = '\0';
 					return true;
@@ -379,9 +380,9 @@ void JackRouter::processOutputs() const
     
     for (int i = 0; i < fActiveOutputs; i++) {
         if (!fFloatSample) {
-            jack_default_audio_sample_t* buffer = (jack_default_audio_sample_t*)jack_port_get_buffer(fOutputPorts[i], fBufferSize);
+            const auto buffer = (jack_default_audio_sample_t*)jack_port_get_buffer(fOutputPorts[i], fBufferSize);
             long* out = (long*)fOutputBuffers[i] + pos;
-            jack_default_audio_sample_t gain = jack_default_audio_sample_t(1)/jack_default_audio_sample_t(0x7fffffff);
+            const jack_default_audio_sample_t gain = jack_default_audio_sample_t(1)/jack_default_audio_sample_t(0x7fffffff);
             for (int j = 0; j < fBufferSize; j++) {
                 buffer[j] = out[j] * gain;
             }
@@ -396,7 +397,7 @@ void JackRouter::processOutputs() const
 //------------------------------------------------------------------------------------------
 int JackRouter::processCallback(jack_nframes_t nframes, void* arg)
 {
-	JackRouter* driver = (JackRouter*)arg;
+    auto driver = (JackRouter*)arg;
   	driver->bufferSwitch();
 	return 0;
 }
@@ -416,7 +417,8 @@ long JackRouter::getDriverVersion()
 //------------------------------------------------------------------------------------------
 void JackRouter::getErrorMessage(char *string)
 {
-	strcpy (string, fErrorMessage);
+
+	strcpy(string, fErrorMessage);
 }
 
 //------------------------------------------------------------------------------------------
@@ -573,7 +575,7 @@ ASIOError JackRouter::getClockSources(ASIOClockSource *clocks, long *numSources)
 		clocks->associatedChannel = -1;
 		clocks->associatedGroup = -1;
 		clocks->isCurrentSource = ASIOTrue;
-		strcpy(clocks->name, "Internal");
+		strcpy_s(clocks->name, "Internal");
 		*numSources = 1;
 		return ASE_OK;
 	} else {
@@ -624,7 +626,7 @@ ASIOError JackRouter::getChannelInfo(ASIOChannelInfo *info)
 #ifdef JACK_LOG    
 	*fStream << "==========================" << std::endl;
     *fStream << "JackRouter::getChannelInfo" << std::endl;
-	*fStream << "==========================" << std::endl;
+	
 #endif
 
 	info->channelGroup = 0;
@@ -654,7 +656,7 @@ ASIOError JackRouter::getChannelInfo(ASIOChannelInfo *info)
             jack_port_t* port = jack_port_by_name(fClient, ports[info->channel]);
             if (port) {	
                 if (jack_port_get_aliases(port, aliases) == 2) {
-                    strncpy(info->name, aliases[1], 32);
+                    strncpy_s(info->name, aliases[1], 32);
                 #ifdef JACK_LOG
                     *fStream << "Input " << "fActiveInputs = " << i << " ASIO_channel = " << info->channel <<  std::endl;
                 #endif
@@ -663,8 +665,8 @@ ASIOError JackRouter::getChannelInfo(ASIOChannelInfo *info)
             }
         } 
             
-        _snprintf(buf, sizeof(buf) - 1, "In%d", info->channel + 1);
-        strcpy(info->name, buf);
+        _snprintf_s(buf, sizeof(buf) - 1, "In%d", info->channel + 1);
+        strcpy_s(info->name, buf);
          
 	} else {
 		for (i = 0; i < fActiveOutputs; i++) {
@@ -679,7 +681,7 @@ ASIOError JackRouter::getChannelInfo(ASIOChannelInfo *info)
             jack_port_t* port = jack_port_by_name(fClient, ports[info->channel]);
             if (port) {	
                 if (jack_port_get_aliases(port, aliases) == 2) {
-                    strncpy(info->name, aliases[1], 32);
+                    strncpy_s(info->name, aliases[1], 32);
                 #ifdef JACK_LOG
                     *fStream << "Output " << "fActiveOutputs = " << i << " ASIO_channel = " << info->channel <<  std::endl;
                 #endif    
@@ -687,12 +689,15 @@ ASIOError JackRouter::getChannelInfo(ASIOChannelInfo *info)
                 }	
             }
         } 
-        _snprintf(buf, sizeof(buf) - 1, "Out%d", info->channel + 1);
-        strcpy(info->name, buf);
+        _snprintf_s(buf, sizeof(buf) - 1, "Out%d", info->channel + 1);
+        strcpy_s(info->name, buf);
     }
     
 end:
 
+#ifdef JACK_LOG
+    *fStream << "==========================" << std::endl;
+#endif
 	free(aliases[0]);
 	free(aliases[1]);
 	return ASE_OK;
@@ -704,8 +709,7 @@ ASIOError JackRouter::createBuffers(ASIOBufferInfo *bufferInfos, long numChannel
 	long bufferSize, ASIOCallbacks *callbacks)
 {
 	ASIOBufferInfo *info = bufferInfos;
-	long i;
-	bool notEnoughMem = false;
+    bool notEnoughMem = false;
 	char buf[256];
 	fActiveInputs = 0;
 	fActiveOutputs = 0;
@@ -716,7 +720,7 @@ ASIOError JackRouter::createBuffers(ASIOBufferInfo *bufferInfos, long numChannel
 	*fStream << "==========================" << std::endl;
 #endif
 
-	for (i = 0; i < numChannels; i++, info++) {
+	for (long i = 0; i < numChannels; i++, info++) {
 		if (info->isInput) {
             
 			if (info->channelNum < 0 || info->channelNum >= kNumInputs) {
@@ -740,7 +744,7 @@ ASIOError JackRouter::createBuffers(ASIOBufferInfo *bufferInfos, long numChannel
         #ifdef JACK_LOG
             *fStream << "Input " << "fActiveInputs = " << i << " ASIO_channel = " << info->channelNum <<  std::endl;
         #endif
-			_snprintf(buf, sizeof(buf) - 1, "in%d", info->channelNum + 1);
+			_snprintf_s(buf, sizeof(buf) - 1, "in%d", info->channelNum + 1);
 			fInputPorts[fActiveInputs]
 				= jack_port_register(fClient, buf, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput,0);
 			if (fInputPorts[fActiveInputs] == NULL) {
@@ -776,7 +780,7 @@ error:
         #ifdef JACK_LOG
             *fStream << "Input " << "fActiveOutputs = " << i << " ASIO_channel = " << info->channelNum <<  std::endl;
 		#endif	
-			_snprintf(buf, sizeof(buf) - 1, "out%d", info->channelNum + 1);
+			_snprintf_s(buf, sizeof(buf) - 1, "out%d", info->channelNum + 1);
 			fOutputPorts[fActiveOutputs]
 				= jack_port_register(fClient, buf, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput,0);
 			if (fOutputPorts[fActiveOutputs] == NULL) {
@@ -821,10 +825,18 @@ error:
 //---------------------------------------------------------------------------------------------
 ASIOError JackRouter::disposeBuffers()
 {
+
+#ifdef JACK_LOG 
+    *fStream << "JackRouter::disposeBuffers" <<  std::endl;
+#endif
+
 	long i;
 
 	fCallbacks = nullptr;
-	stop();
+    if(fRunning)
+    {
+        stop();
+    }
 
 	for (i = 0; i < fActiveInputs; i++) {
 		delete[] static_cast<JackRouter**>(fInputBuffers[i]);
@@ -918,22 +930,28 @@ double AsioSamples2double(ASIOSamples* samples)
 }
 
 //---------------------------------------------------------------------------------------------
-void getNanoSeconds(ASIOTimeStamp* ts)
+void getNanoSeconds(ASIOTimeStamp* time)
 {
-	double nanoSeconds = (double)((unsigned long)timeGetTime ()) * 1000000.;
-	ts->hi = (unsigned long)(nanoSeconds / twoRaisedTo32);
-	ts->lo = (unsigned long)(nanoSeconds - (ts->hi * twoRaisedTo32));
+    const double nanoSeconds = (double)((unsigned long)timeGetTime ()) * 1000000.;
+	time->hi = (unsigned long)(nanoSeconds / twoRaisedTo32);
+	time->lo = (unsigned long)(nanoSeconds - (time->hi * twoRaisedTo32));
 }
 
 //------------------------------------------------------------------------
-void JackRouter::saveConnections()
+void JackRouter::saveConnections() const
 {
+
+#ifdef JACK_LOG 
+    *fStream << "JackRouter::saveConnections" <<  std::endl;
+#endif
+
     const char** connections;
  	int i;
 
     for (i = 0; i < fActiveInputs; ++i) {
         if (fInputPorts[i] && (connections = jack_port_get_connections(fInputPorts[i])) != 0) {
             for (int j = 0; connections[j]; j++) {
+                // TODO: Try Emplace ?
                 fConnections.push_back(make_pair(connections[j], jack_port_name(fInputPorts[i])));
             }
             jack_free(connections);
@@ -951,11 +969,14 @@ void JackRouter::saveConnections()
 }
 
 //------------------------------------------------------------------------
-void JackRouter::restoreConnections()
+void JackRouter::restoreConnections() const
 {
-    list<pair<string, string> >::const_iterator it;
 
-    for (it = fConnections.begin(); it != fConnections.end(); it++) {
+#ifdef JACK_LOG 
+    *fStream << "JackRouter::restoreConnections" <<  std::endl;
+#endif
+
+    for (list<pair<string, string>>::const_iterator it = fConnections.begin(); it != fConnections.end(); it++) {
         pair<string, string> connection = *it;
         jack_connect(fClient, connection.first.c_str(), connection.second.c_str());
     }
@@ -967,6 +988,7 @@ void JackRouter::restoreConnections()
 //------------------------------------------------------------------------------------------
 void JackRouter::autoConnect()
 {
+    
 	const char** ports;
 
 #ifdef JACK_LOG    
